@@ -1,34 +1,52 @@
-import heapq
+class Graph:
+    def __init__(self, vertices):
+        self.V = vertices
+        self.graph = [[0 for column in range(vertices)] for row in range(vertices)]
 
-def prim(graph):
-    # Inicial aqui
-    visited = set()
-    mst = []
-    start_node = list(graph.keys())[0]
-    visited.add(start_node)
-    neighbor: object
-    edges = [(cost, start_node, neighbor) for neighbor, cost in graph[start_node]]
-    heapq.heapify(edges)
+    def min_key(self, key, mst_set):
+        min_val = float('inf')
+        min_index = -1
+        for v in range(self.V):
+            if key[v] < min_val and mst_set[v] is False:
+                min_val = key[v]
+                min_index = v
+        return min_index
 
-    while edges:
-        cost, u, v = heapq.heappop(edges)
-        if v not in visited:
-            visited.add(v)
-            mst.append((u, v, cost))
-            for neighbor, cost in graph[v]:
-                if neighbor not in visited:
-                    heapq.heappush(edges, (cost, v, neighbor))
+    def prim_mst(self):
+        parent = [-1] * self.V
+        key = [float('inf')] * self.V
+        key[0] = 0
+        mst_set = [False] * self.V
 
-    return mst
+        parent[0] = -1
 
+        for cout in range(self.V):
+            u = self.min_key(key, mst_set)
+            mst_set[u] = True
 
-# Exemplo de teste:
-graph = {
-    'A': [('B', 2), ('C', 3)],
-    'B': [('A', 2), ('C', 4), ('D', 5)],
-    'C': [('A', 3), ('B', 4), ('D', 1)],
-    'D': [('B', 5), ('C', 1)]
-}
+            for v in range(self.V):
+                if self.graph[u][v] > 0 and mst_set[v] is False and key[v] > self.graph[u][v]:
+                    key[v] = self.graph[u][v]
+                    parent[v] = u
 
-mst_prim = prim(graph)
-print("MST usando o algoritmo de Prim:", mst_prim)
+        return parent
+
+def print_mst(parent, graph):
+    print("Edge \tWeight")
+    for i in range(1, len(parent)):
+        print(parent[i], "-", i, "\t", graph[i][parent[i]])
+
+# Interface
+def user_input():
+    V = int(input("Digite o número de vértices: "))
+    g = Graph(V)
+    for i in range(V):
+        for j in range(V):
+            weight = int(input(f"Digite o peso da aresta entre o vértice {i} e o vértice {j} (0 se não houver aresta): "))
+            g.graph[i][j] = weight
+    return g
+
+if __name__ == '__main__':
+    g = user_input()
+    parent = g.prim_mst()
+    print_mst(parent, g.graph)
