@@ -1,41 +1,72 @@
-class DisjointSet:
+class Graph:
     def __init__(self, vertices):
-        self.parent = {v: v for v in vertices}
+        self.V = vertices
+        self.graph = []
 
-    def find(self, item):
-        if self.parent[item] == item:
-            return item
-        return self.find(self.parent[item])
+    def add_edge(self, u, v, w):
+        self.graph.append([u, v, w])
 
-    def union(self, set1, set2):
-        self.parent[set1] = set2
+    def find(self, parent, i):
+        if parent[i] == i:
+            return i
+        return self.find(parent, parent[i])
 
+    def union(self, parent, rank, x, y):
+        x_root = self.find(parent, x)
+        y_root = self.find(parent, y)
 
-def kruskal(graph):
-    mst = []
-    vertices = set([v for v in graph])
-    edges = [(graph[u][v], u, v) for u in graph for v in graph[u]]
-    edges.sort()
+        if rank[x_root] < rank[y_root]:
+            parent[x_root] = y_root
+        elif rank[x_root] > rank[y_root]:
+            parent[y_root] = x_root
+        else:
+            parent[y_root] = x_root
+            rank[x_root] += 1
 
-    ds = DisjointSet(vertices)
+    def kruskal_mst(self):
+        result = []
 
-    for cost, u, v in edges:
-        set1 = ds.find(u)
-        set2 = ds.find(v)
-        if set1 != set2:
-            mst.append((u, v, cost))
-            ds.union(set1, set2)
+        i = 0
+        e = 0
 
-    return mst
+        self.graph = sorted(self.graph, key=lambda item: item[2])
 
+        parent = []
+        rank = []
 
-# Exemplo:
-graph = {
-    'A': {'B': 2, 'C': 3},
-    'B': {'A': 2, 'C': 4, 'D': 5},
-    'C': {'A': 3, 'B': 4, 'D': 1},
-    'D': {'B': 5, 'C': 1}
-}
+        for node in range(self.V):
+            parent.append(node)
+            rank.append(0)
 
-mst_kruskal = kruskal(graph)
-print("MST usando o algoritmo de Kruskal:", mst_kruskal)
+        while e < self.V - 1:
+            u, v, w = self.graph[i]
+            i += 1
+            x = self.find(parent, u)
+            y = self.find(parent, v)
+
+            if x != y:
+                e += 1
+                result.append([u, v, w])
+                self.union(parent, rank, x, y)
+
+        return result
+
+def print_mst(result):
+    print("Edge \tWeight")
+    for u, v, weight in result:
+        print(f"{u} - {v}\t{weight}")
+
+# Interface de usuário para entrada de dados
+def user_input():
+    V = int(input("Digite o número de vértices: "))
+    g = Graph(V)
+    num_edges = int(input("Digite o número de arestas: "))
+    for _ in range(num_edges):
+        u, v, w = map(int, input("Digite os vértices e o peso da aresta (u v w): ").split())
+        g.add_edge(u, v, w)
+    return g
+
+if __name__ == '__main__':
+    g = user_input()
+    result = g.kruskal_mst()
+    print_mst(result)
